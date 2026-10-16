@@ -13,23 +13,41 @@
 const { transformFile, createProjectState } = require('./transform.cjs');
 
 let ts;
-let core;
+let bundledCore;
 try {
 	ts = require('typescript');
 } catch {
-	console.error('[tsc-rs-vue-mapper] requires a "typescript" package visible from ' + __dirname);
+	console.error('[tsc-rs-vue-mapper] requires a "typescript" dependency in ' + __dirname);
 	process.exit(1);
 }
 try {
-	core = require('@vue/language-core');
+	bundledCore = require('@vue/language-core');
 } catch {
-	console.error('[tsc-rs-vue-mapper] requires "@vue/language-core" as a dependency of ' + __dirname);
+	console.error('[tsc-rs-vue-mapper] requires an "@vue/language-core" dependency in ' + __dirname);
 	process.exit(1);
 }
 
 const projects = new Map();
 
-function resolveVueOptions(configFileName, entryOptions) {
+function dirnameOf(fileName) {
+	const idx = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'));
+	return idx < 0 ? process.cwd() : fileName.slice(0, idx) || '/';
+}
+
+function resolveCore(configFileName) {
+	if (process.env.VUE_MAPPER_PROJECT_CORE && configFileName) {
+		try {
+			const resolved = require.resolve('@vue/language-core', { paths: [dirnameOf(configFileName)] });
+			if (resolved) {
+				return require(resolved);
+			}
+	} catch {
+	}
+	}
+	return bundledCore;
+}
+
+function resolveVueOptions(core, configFileName, entryOptions) {
 	let fileOptions;
 	try {
 		fileOptions = configFileName
@@ -56,7 +74,8 @@ const handlers = {
 	},
 	openProject(params) {
 		const handle = params.projectHandle;
-		const vueOptions = resolveVueOptions(params.configFileName, params.options);
+		const core = resolveCore(params.configFileName);
+		const vueOptions = resolveVueOptions(core, params.configFileName, params.options);
 		const compilerOptions = toCompilerOptions(params.compilerOptions);
 		projects.set(handle, createProjectState(ts, core, compilerOptions, vueOptions));
 		return {};

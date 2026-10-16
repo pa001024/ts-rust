@@ -5,8 +5,9 @@
 // `@vue/language-core`: the same codegen vue-tsc type-checks.
 
 const VERBATIM = 0;
+const ATOM = 1;
 
-function toSpanTuples(mappings) {
+function toSpanTuples(mappings, virtualText, originalText) {
 	const tuples = [];
 	if (!mappings) {
 		return tuples;
@@ -29,7 +30,13 @@ function toSpanTuples(mappings) {
 			if (typeof s !== 'number' || typeof g !== 'number') {
 				continue;
 			}
-			tuples.push([g, len, s, len, VERBATIM]);
+			let kind = VERBATIM;
+			if (typeof virtualText === 'string' && typeof originalText === 'string') {
+				if (virtualText.slice(g, g + len) !== originalText.slice(s, s + len)) {
+					kind = ATOM;
+				}
+			}
+			tuples.push([g, len, s, len, kind]);
 		}
 	}
 	tuples.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
@@ -53,10 +60,11 @@ function transformFile(state, fileName, content) {
 		return { text: content, extension: '.ts', mappings: [] };
 	}
 	const snap = svc.code.snapshot;
+	const text = snap.getText(0, snap.getLength());
 	return {
-		text: snap.getText(0, snap.getLength()),
+		text,
 		extension: typeof svc.extension === 'string' && svc.extension.startsWith('.') ? svc.extension : '.ts',
-		mappings: toSpanTuples(svc.code.mappings),
+		mappings: toSpanTuples(svc.code.mappings, text, content),
 	};
 }
 

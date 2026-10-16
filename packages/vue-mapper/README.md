@@ -73,6 +73,13 @@ override them:
 
 ## How it works
 
+The mapper uses its bundled `@vue/language-core` for SFC codegen, so the
+virtual code and its helper types always form a consistent, tested pair.
+Set `VUE_MAPPER_PROJECT_CORE=1` to prefer the checked project's own copy
+instead (resolved from the tsconfig directory, like `vue-tsc` does); on the
+TypeScript 7 engine an older project copy can report substantially more
+errors than the bundled one, so the bundled default is recommended.
+
 1. `tsc-rs` matches `*.vue` files from `include` and resolves `./X.vue`
    imports to them (registered through the mapper's `extensions`).
 2. For each `.vue` file it sends
@@ -88,6 +95,19 @@ Protocol details: JSON-RPC 2.0 with LSP `Content-Length` framing over the
 mapper process's stdio; `initialize` negotiates `utf-16` positions;
 `openProject` receives the effective compiler options. See
 `mapper.cjs` / `transform.cjs`.
+
+## Expected differences from vue-tsc
+
+The engine is TypeScript 7.1, while most `vue-tsc` installs check with
+TypeScript 5.9, so diagnostics are not identical where the languages
+differ — the same is true for plain `.ts` projects. On top of language
+differences, the bundled codegen is newer than what many projects pin, and
+newer codegen checks templates more thoroughly: on one 400-file project it
+surfaced 11 genuine template bugs (`.value` on non-refs) that the project's
+pinned codegen misses, plus TypeScript 7 strictness findings. Diagnostics
+located entirely in synthesized virtual code are reported with the note
+"has no corresponding location in the original file" instead of being
+silently dropped.
 
 ## Limitations
 
