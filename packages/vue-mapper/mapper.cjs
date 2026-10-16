@@ -17,13 +17,13 @@ let bundledCore
 try {
     ts = require("typescript")
 } catch {
-    console.error('[tsc-rs-vue-mapper] requires a "typescript" dependency in ' + __dirname)
+    console.error(`[tsc-rs-vue-mapper] requires a "typescript" dependency in ${__dirname}`)
     process.exit(1)
 }
 try {
     bundledCore = require("@vue/language-core")
 } catch {
-    console.error('[tsc-rs-vue-mapper] requires an "@vue/language-core" dependency in ' + __dirname)
+    console.error(`[tsc-rs-vue-mapper] requires an "@vue/language-core" dependency in ${__dirname}`)
     process.exit(1)
 }
 
@@ -82,7 +82,7 @@ const handlers = {
     transform(params) {
         const state = projects.get(params.projectHandle)
         if (!state) {
-            throw new Error("unknown projectHandle " + params.projectHandle)
+            throw new Error(`unknown projectHandle ${params.projectHandle}`)
         }
         const out = transformFile(state, params.fileName, params.content)
         return { text: out.text, extension: out.extension, mappings: out.mappings }
@@ -136,14 +136,14 @@ function handleMessage(body) {
     }
     const fn = handlers[msg.method]
     if (!fn) {
-        writeMessage({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "Method not found: " + msg.method } })
+        writeMessage({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: `Method not found: ${msg.method}` } })
         return
     }
     Promise.resolve()
         .then(() => fn(msg.params || {}))
         .then(
             result => writeMessage({ jsonrpc: "2.0", id: msg.id, result: result === undefined ? null : result }),
-            err => writeMessage({ jsonrpc: "2.0", id: msg.id, error: { code: -32603, message: String((err && err.message) || err) } })
+            err => writeMessage({ jsonrpc: "2.0", id: msg.id, error: { code: -32603, message: String(err?.message || err) } })
         )
 }
 

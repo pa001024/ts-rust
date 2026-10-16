@@ -56,7 +56,7 @@ function transformFile(state, fileName, content) {
         return { text: content, extension: ".ts", mappings: [] }
     }
     const svc = plugin.typescript.getServiceScript(vcode)
-    if (!svc || !svc.code || !svc.code.snapshot) {
+    if (!svc?.code?.snapshot) {
         return { text: content, extension: ".ts", mappings: [] }
     }
     const snap = svc.code.snapshot
