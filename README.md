@@ -86,6 +86,29 @@ release after 0.2.0) macOS x64, Windows x64 and Windows arm64.
 
 To use it in VS Code, see the [npm package README](npm/tsc-rs-readme.md#vs-code).
 
+## Vue SFC support (fork)
+
+This fork adds `vue-tsc` functionality through a content-mapper plugin,
+[`tsc-rs-vue-mapper`](packages/vue-mapper), which expands `.vue` files to
+virtual TypeScript with `@vue/language-core` (the same codegen `vue-tsc`
+uses) and maps diagnostics back to `.vue` positions. No Rust changes were
+needed: the ported content-mapper protocol (`contentMappers` + `--runExternalCode`)
+does the hosting.
+
+```json
+{
+	"include": ["src"],
+	"contentMappers": [{ "package": "tsc-rs-vue-mapper", "extensions": [".vue"] }]
+}
+```
+
+```sh
+npm install -D tsc-rs-vue-mapper
+tsc-rs --runExternalCode -p tsconfig.json
+```
+
+See [packages/vue-mapper](packages/vue-mapper) for options, limitations and tests.
+
 ## Effect diagnostics
 
 `tsc-rs` has the [Effect](https://effect.website) language service diagnostics built in (codes

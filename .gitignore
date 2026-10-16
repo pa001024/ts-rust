@@ -1,6 +1,8 @@
 target/
 *.tsbuildinfo
+node_modules/
 .claude
 
 __pycache__/
 /.tmp-cargo/
+package-lock.json
